@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#2c1e16">
+  <meta name="description" content="A personal V60 dial-in bench. Log a cup, get the next recipe.">
+  <title>Drawdown — V60 dial-in</title>
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,560;0,9..144,650;1,9..144,520&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <p id="boot" class="boot">Opening the bench…</p>
+  <noscript><p class="boot">Drawdown needs JavaScript for the log and the recipe.</p></noscript>
+
+  <div id="gate" class="gate" hidden>
+    <form id="gate-form" class="gate-card">
+      <p class="eyebrow">V60 bench</p>
+      <h1>Drawdown</h1>
+      <p class="lede">This log is private.</p>
+      <label class="field">Password
+        <input id="password" type="password" autocomplete="current-password" required>
+      </label>
+      <p id="gate-error" class="form-error" role="alert"></p>
+      <button class="btn btn-block" type="submit">Unlock</button>
+    </form>
+  </div>
+
+  <div id="app" class="page" hidden>
+    <header class="top">
+      <div class="brand">
+        <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+          <path d="M16 3c2.4 4.6 7 7.8 7 13.4a7 7 0 0 1-14 0C9 10.8 13.6 7.6 16 3z"></path>
+        </svg>
+        <div>
+          <p class="eyebrow">V60 bench</p>
+          <h1>Drawdown</h1>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button type="button" id="setup-open" class="bean-button">
+          <span id="bean-name">Coffee</span>
+          <span id="bean-meta"></span>
+          <span id="new-coffee" class="badge" hidden>New coffee</span>
+        </button>
+        <button type="button" id="lock" class="text-button" hidden>Lock</button>
+      </div>
+    </header>
+
+    <p id="open-warning" class="open-warning" hidden>Unlocked. Set APP_PASSWORD before using the public Cloudflare address.</p>
+    <p id="status" class="status" role="status"></p>
+
+    <main>
+      <section id="recipe" class="recipe" aria-label="Next brew"></section>
+
+      <div class="split">
+        <section class="panel" aria-labelledby="log-title">
+          <h2 id="log-title">Log a brew</h2>
+          <p class="hint">These parameters start from the current recipe. After you taste, set the time and the cup, then save.</p>
+          <form id="log-form" autocomplete="off">
+            <label class="field">When
+              <input id="brew-when" type="datetime-local" required>
+            </label>
+
+            <div class="slider">
+              <div class="slider-top">
+                <label for="coffee-number">Dose</label>
+                <span class="slider-val">
+                  <input id="coffee-number" type="number" min="8" max="40" step="0.5" value="18" inputmode="decimal">
+                  <span>g</span>
+                </span>
+              </div>
+              <input id="coffee-range" type="range" min="12" max="30" step="0.5" value="18" aria-label="Dose in grams">
+            </div>
+
+            <div class="slider">
+              <div class="slider-top">
+                <label for="water-number">Water</label>
+                <span class="slider-val">
+                  <input id="water-number" type="number" min="80" max="700" step="1" value="260" inputmode="numeric">
+                  <span>g</span>
+                </span>
+              </div>
+              <input id="water-range" type="range" min="180" max="400" step="1" value="260" aria-label="Water in grams">
+              <p class="ratio-line">Ratio <strong id="ratio-readout">1:14.4</strong></p>
+              <div class="presets" role="group" aria-label="Ratio presets">
+                <button type="button" data-ratio="14.5">1:14.5</button>
+                <button type="button" data-ratio="15">1:15</button>
+                <button type="button" data-ratio="16">1:16</button>
+                <button type="button" data-ratio="17">1:17</button>
+              </div>
+            </div>
+
+            <div class="slider">
+              <div class="slider-top">
+                <label for="grind-number">Grind</label>
+                <span class="slider-val">
+                  <input id="grind-number" type="number" min="0.1" max="999" step="0.1" value="7.5" inputmode="decimal">
+                  <span id="grind-unit">1Zpresso K-Plus</span>
+                </span>
+              </div>
+              <input id="grind-range" type="range" min="3" max="12" step="0.1" value="7.5" aria-label="Grind setting">
+              <div class="segment" role="group" aria-label="Grind style">
+                <button type="button" data-grind-style="vertical" aria-pressed="false">Vertical</button>
+                <button type="button" data-grind-style="angle45" aria-pressed="true">45° slow</button>
+              </div>
+              <p id="grind-hint" class="field-hint">0.1 is one click on a K-Plus. A lower number is finer.</p>
+            </div>
+
+            <div class="slider">
+              <div class="slider-top">
+                <label for="temp-number">Temperature</label>
+                <span class="slider-val">
+                  <input id="temp-number" type="number" min="75" max="100" step="1" value="91" inputmode="numeric">
+                  <span>°C</span>
+                </span>
+              </div>
+              <input id="temp-range" type="range" min="80" max="100" step="1" value="91" aria-label="Water temperature">
+              <label class="check"><input id="temp-drops" type="checkbox"> Temperature fell by the end</label>
+            </div>
+
+            <div id="temp-end-row" class="slider" hidden>
+              <div class="slider-top">
+                <label for="temp-end-number">End temperature</label>
+                <span class="slider-val">
+                  <input id="temp-end-number" type="number" min="60" max="100" step="1" value="88" inputmode="numeric">
+                  <span>°C</span>
+                </span>
+              </div>
+              <input id="temp-end-range" type="range" min="80" max="100" step="1" value="88" aria-label="End temperature">
+            </div>
+
+            <div class="slider">
+              <div class="slider-top">
+                <label for="pours-number">Pours</label>
+                <span class="slider-val">
+                  <input id="pours-number" type="number" min="1" max="8" step="1" value="3" inputmode="numeric">
+                </span>
+              </div>
+              <input id="pours-range" type="range" min="1" max="6" step="1" value="3" aria-label="Number of pours">
+            </div>
+
+            <label class="field">Pour plan
+              <textarea id="pour-plan" rows="4" placeholder="0:00 bloom 50 g, light swirl&#10;0:40 spiral to 160 g&#10;1:15 center to 260 g"></textarea>
+            </label>
+
+            <label class="field">Agitation
+              <textarea id="agitation" rows="2" placeholder="Swirl on the bloom only. Last pour in the center."></textarea>
+            </label>
+
+            <div id="tbt-row" class="slider">
+              <div class="slider-top">
+                <label for="tbt-number">Total time</label>
+                <span class="slider-val">
+                  <input id="tbt-number" type="number" min="60" max="420" step="5" value="145" inputmode="numeric" aria-describedby="tbt-note">
+                  <span id="tbt-clock">2:25</span>
+                </span>
+              </div>
+              <input id="tbt-range" type="range" min="90" max="270" step="5" value="145" aria-label="Total brew time in seconds">
+              <p id="tbt-note" class="field-hint">Target is 2:25–2:40. Confirm it, or set the time you actually brewed.</p>
+              <button type="button" id="tbt-confirm" class="text-button">I hit this time</button>
+            </div>
+
+            <label class="field">Rest before tasting
+              <input id="rest-number" type="number" min="0" max="30" step="1" placeholder="Minutes, if you waited">
+            </label>
+
+            <h3>How it tasted</h3>
+            <fieldset class="chips" data-group="extraction">
+              <legend>Extraction</legend>
+              <button type="button" class="chip" data-value="under">Under</button>
+              <button type="button" class="chip" data-value="balanced">Balanced</button>
+              <button type="button" class="chip" data-value="over">Over</button>
+              <button type="button" class="chip" data-value="uneven" title="Bitter finish, hollow body">Uneven</button>
+            </fieldset>
+            <fieldset class="chips" data-group="bitterness">
+              <legend>Bitterness</legend>
+              <button type="button" class="chip" data-value="none">None</button>
+              <button type="button" class="chip" data-value="mild">Mild</button>
+              <button type="button" class="chip" data-value="strong">Strong</button>
+              <button type="button" class="chip" data-value="dry">Dry finish</button>
+            </fieldset>
+            <fieldset class="chips" data-group="acidity">
+              <legend>Acidity</legend>
+              <button type="button" class="chip" data-value="muted">Muted</button>
+              <button type="button" class="chip" data-value="soft">Soft</button>
+              <button type="button" class="chip" data-value="bright">Bright</button>
+              <button type="button" class="chip" data-value="sharp">Sharp</button>
+            </fieldset>
+            <fieldset class="chips" data-group="sweetness">
+              <legend>Sweetness</legend>
+              <button type="button" class="chip" data-value="low">Low</button>
+              <button type="button" class="chip" data-value="medium">Medium</button>
+              <button type="button" class="chip" data-value="high">High</button>
+            </fieldset>
+            <fieldset class="chips" data-group="body">
+              <legend>Body</legend>
+              <button type="button" class="chip" data-value="watery">Watery</button>
+              <button type="button" class="chip" data-value="light">Light</button>
+              <button type="button" class="chip" data-value="medium">Medium</button>
+              <button type="button" class="chip" data-value="syrupy">Syrupy</button>
+            </fieldset>
+            <fieldset class="chips" data-group="clarity">
+              <legend>Clarity</legend>
+              <button type="button" class="chip" data-value="clean">Clean</button>
+              <button type="button" class="chip" data-value="muddy">Muddy</button>
+            </fieldset>
+
+            <label class="field">Notes
+              <textarea id="notes" rows="4" placeholder="What stayed in the finish two minutes later?"></textarea>
+            </label>
+
+            <p id="form-error" class="form-error" role="alert"></p>
+            <button id="save-brew" class="btn btn-block" type="submit">Save this brew and get the next recipe</button>
+          </form>
+        </section>
+
+        <section class="panel" aria-labelledby="history-title">
+          <div class="history-head">
+            <h2 id="history-title">Latest brews</h2>
+            <p id="history-meta"></p>
+          </div>
+          <div id="history-list"></div>
+          <button type="button" id="history-more" class="text-button" hidden>Show earlier brews</button>
+        </section>
+      </div>
+    </main>
+
+    <footer class="colophon">Recipes come from Gemini, using your brew log. The cup is the measurement.</footer>
+  </div>
+
+  <dialog id="setup-dialog" aria-labelledby="setup-title">
+    <form id="setup-form">
+      <div class="dialog-top">
+        <h2 id="setup-title">Coffee and gear</h2>
+        <button type="button" id="setup-close" class="text-button">Close</button>
+      </div>
+      <div class="setup-grid">
+        <label class="field wide">Coffee
+          <input id="beans-name" type="text" autocomplete="off">
+        </label>
+        <label class="field">Variety
+          <input id="variety" type="text" autocomplete="off">
+        </label>
+        <label class="field">Process
+          <input id="process" type="text" autocomplete="off" placeholder="Natural, washed, honey">
+        </label>
+        <label class="field">Roast
+          <input id="roast-level" type="text" autocomplete="off" placeholder="Light (Nordic)">
+        </label>
+        <label class="field">Roast date
+          <input id="roast-date" type="date">
+        </label>
+        <label class="field wide">Descriptors
+          <input id="descriptors" type="text" autocomplete="off">
+        </label>
+        <label class="field">Brewer
+          <input id="brewer" type="text" autocomplete="off">
+        </label>
+        <label class="field">Filter
+          <input id="filter-type" type="text" autocomplete="off">
+        </label>
+        <label class="field">Grinder
+          <input id="grinder" type="text" autocomplete="off">
+        </label>
+        <label class="field">Kettle
+          <input id="kettle" type="text" autocomplete="off" placeholder="Optional">
+        </label>
+        <label class="field wide">Setup notes
+          <textarea id="setup-notes" rows="3" placeholder="Water, filter rinses, anything the next recipe should know."></textarea>
+        </label>
+      </div>
+      <p id="setup-last-change" class="field-hint" hidden></p>
+      <label class="check">
+        <input id="setup-rethink" type="checkbox">
+        New coffee or equipment. Rethink the next recipe.
+      </label>
+      <p class="field-hint">Use this when the bag or the gear changed. A typo fix can be saved without it.</p>
+      <label class="field">What changed
+        <textarea id="setup-change-note" rows="3" placeholder="New bag: washed Ethiopia, light, roasted yesterday. Same grinder."></textarea>
+      </label>
+      <p id="setup-error" class="form-error" role="alert"></p>
+      <button id="setup-save" class="btn" type="submit">Save setup</button>
+    </form>
+  </dialog>
+
+  <script src="/app.js"></script>
+</body>
+</html>
